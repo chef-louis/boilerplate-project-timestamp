@@ -1,13 +1,15 @@
 // index.js
 // where your node app starts
+const regexNum = new RegExp('^[0-9]+$');
+const regexDate = new RegExp('^[0-9]{1,4}\-[0-9]{1,2}\-[0-9]{1,2}$');
 
 // init project
-var express = require('express');
-var app = express();
+let express = require('express');
+let app = express();
 
 // enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
 // so that your API is remotely testable by FCC 
-var cors = require('cors');
+let cors = require('cors');
 app.use(cors({optionsSuccessStatus: 200}));  // some legacy browsers choke on 204
 
 // http://expressjs.com/en/starter/static-files.html
@@ -20,13 +22,44 @@ app.get("/", function (req, res) {
 
 
 // your first API endpoint... 
-app.get("/api/hello", function (req, res) {
-  res.json({greeting: 'hello API'});
+app.get("/api/:date?", function (req, res) {
+  let myDate;
+  if (!req.params || !req.params.date) {
+    let currDate = new Date();
+    res.json({
+      unix: Date.parse(currDate),
+      utc: currDate.toUTCString()
+    });
+  } else if (regexNum.test(req.params.date)) {
+    let unixValue = Number(req.params.date);
+    res.json({
+      unix: unixValue,
+      utc: new Date(unixValue).toUTCString()
+    });
+  } else {
+    if (regexDate.test(req.params.date)) {
+      myDate = new Date(req.params.date);
+      if (myDate == "Invalid Date") {
+        res.json({
+          error: "Invalid Date"
+        });
+      } else {
+        res.json({
+          unix: Date.parse(req.params.date),
+          utc: myDate.toUTCString()
+        });
+      }
+    } else {
+      res.json({
+        error: "Invalid Date"
+      });
+    }
+  }
 });
 
 
 
 // listen for requests :)
-var listener = app.listen(process.env.PORT, function () {
+let listener = app.listen(33333, function () {
   console.log('Your app is listening on port ' + listener.address().port);
 });
